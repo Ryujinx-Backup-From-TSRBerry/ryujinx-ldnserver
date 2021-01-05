@@ -12,9 +12,9 @@ namespace LanPlayServer
 {
     class ApiSession : HttpSession
     {
-        readonly LdnServer _ldnServer;
+        readonly AbstractLdnServer _ldnServer;
 
-        public ApiSession(HttpServer server, LdnServer ldnServer) : base(server)
+        public ApiSession(HttpServer server, AbstractLdnServer ldnServer) : base(server)
         {
             _ldnServer = ldnServer;
 

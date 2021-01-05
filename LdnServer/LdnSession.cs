@@ -1,6 +1,5 @@
 ﻿using LanPlayServer.Network;
 using LanPlayServer.Network.Types;
-using NetCoreServer;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using System;
 using System.Diagnostics;
@@ -13,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace LanPlayServer
 {
-    class LdnSession : TcpSession
+    abstract class LdnSession
     {
         private const int ExternalProxyTimeout = 2;
 
@@ -24,7 +23,7 @@ namespace LanPlayServer
 
         public string     StringId => Id.ToString().Replace("-", "");
 
-        private LdnServer      _tcpServer;
+        private AbstractLdnServer _tcpServer;
         private RyuLdnProtocol _protocol;
         private NetworkInfo[]  _scanBuffer = new NetworkInfo[1];
 
@@ -39,7 +38,12 @@ namespace LanPlayServer
 
         private bool _initialized = false;
 
-        public LdnSession(LdnServer server) : base(server)
+        public abstract void SendAsync(byte[] data, bool reliable = true);
+        public abstract void Disconnect();
+        public abstract string Id { get; }
+        public abstract IPEndPoint RemoteEndPoint { get; }
+
+        public LdnSession(AbstractLdnServer server)
         {
             _tcpServer = server;
 
@@ -84,7 +88,7 @@ namespace LanPlayServer
                 long deltaTicks = ticks - _lastMessageTicks;
                 long deltaMs    = deltaTicks / (Stopwatch.Frequency / 1000);
 
-                if (deltaMs > LdnServer.InactivityPingFrequency)
+                if (deltaMs > AbstractLdnServer.InactivityPingFrequency)
                 {
                     byte pingId = _pingId++;
 
@@ -184,21 +188,21 @@ namespace LanPlayServer
             CurrentGame?.HandleProxyConnect(this, header, message);
         }
 
-        protected override void OnConnected()
+        public void OnConnected()
         {
             IpAddress = GetSessionIp();
 
             Console.WriteLine($"LDN TCP session with Id {Id} connected!"); ;
         }
 
-        protected override void OnDisconnected()
+        public void OnDisconnected()
         {
             DisconnectFromGame();
 
             Console.WriteLine($"LDN TCP session with Id {Id} disconnected!");
         }
 
-        protected override void OnReceived(byte[] buffer, long offset, long size)
+        public void OnReceived(byte[] buffer, long offset, long size)
         {
             try
             {
@@ -214,14 +218,14 @@ namespace LanPlayServer
             }
         }
 
-        protected override void OnError(SocketError error)
+        protected void OnError(SocketError error)
         {
             Console.WriteLine($"LDN TCP session caught an error with code {error}");
         }
 
         private uint GetSessionIp()
         {
-            IPAddress remoteIp = ((IPEndPoint)Socket.RemoteEndPoint).Address;
+            IPAddress remoteIp = RemoteEndPoint.Address;
             byte[]    bytes    = remoteIp.GetAddressBytes();
 
             Array.Reverse(bytes);
@@ -391,7 +395,7 @@ namespace LanPlayServer
             // We don't need to send anything, just establish a TCP connection.
             // If that is not possible, then their external proxy isn't reachable from the internet.
 
-            IPEndPoint ep = new IPEndPoint((Socket.RemoteEndPoint as IPEndPoint).Address, port);
+            IPEndPoint ep = new IPEndPoint(RemoteEndPoint.Address, port);
 
             NetCoreServer.TcpClient client = new NetCoreServer.TcpClient(ep);
             client.ConnectAsync();

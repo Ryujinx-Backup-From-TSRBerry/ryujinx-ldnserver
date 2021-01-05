@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace LanPlayServer
 {
-    class LdnServer : TcpServer
+    abstract class AbstractLdnServer
     {
         public static readonly int InactivityPingFrequency = 10000;
 
@@ -21,12 +21,13 @@ namespace LanPlayServer
 
         private CancellationTokenSource _cancel = new CancellationTokenSource();
 
-        public LdnServer(IPAddress address, int port) : base(address, port)
+        public AbstractLdnServer(IPAddress address, int port)
         { 
-            OptionNoDelay = true;
-
-            Task.Run(BackgroundPingTask);
+            //Task.Run(BackgroundPingTask);
         }
+
+        public abstract void Start();
+        public abstract void Restart();
 
         public HostedGame CreateGame(string id, NetworkInfo info, AddressList dhcpConfig, string oldOwnerID)
         {
@@ -155,23 +156,24 @@ namespace LanPlayServer
             removed?.Close();
         }
 
+        /*
         protected override TcpSession CreateSession()
         { 
             return new LdnSession(this);
         }
+        */
 
-        protected override void OnError(SocketError error)
+        protected void OnError(SocketError error)
         {
             Console.WriteLine($"LDN TCP server caught an error with code {error}");
         }
 
-        public override bool Stop()
+        public virtual void Stop()
         {
             _cancel.Cancel();
-
-            return base.Stop();
         }
 
+        /*
         private async Task BackgroundPingTask()
         {
             while (!IsDisposed)
@@ -191,5 +193,6 @@ namespace LanPlayServer
                 }
             }
         }
+        */
     }
 }

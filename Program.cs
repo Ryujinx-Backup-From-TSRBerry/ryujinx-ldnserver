@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.HOS.Services.Ldn.Types;
+﻿using LanPlayServer.LdnServer.Backends;
+using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -10,7 +11,7 @@ namespace LanPlayServer
         static void Main(string[] args)
         {
             int portLdn = 30456;
-            int portApi = 8080;
+            int portApi = 8081;
 
             Console.WriteLine();
             Console.WriteLine( "__________                     __ .__                  .____         .___        ");
@@ -24,7 +25,7 @@ namespace LanPlayServer
             Console.WriteLine();
             Console.WriteLine("- Informations");
 
-            LdnServer     ldnServer = new LdnServer(IPAddress.Any, portLdn);
+            AbstractLdnServer ldnServer = new ValveNetworkingServer(IPAddress.Any, portLdn);
             ApiServer apiServer = new ApiServer(IPAddress.Any, portApi, ldnServer);
 
             Console.Write($"    LdnServer (port: {portLdn}) starting...");
@@ -78,7 +79,7 @@ namespace LanPlayServer
             Console.WriteLine(" Done!");
         }
 
-        static bool RestartLdnServer(LdnServer ldnServer)
+        static bool RestartLdnServer(AbstractLdnServer ldnServer)
         {
             Console.Write("    !restart-ldn: LDN Server restarting...");
             ldnServer.Restart();
@@ -97,7 +98,7 @@ namespace LanPlayServer
         }
 
         // TODO: Maybe handle that in the API with a password or something ?
-        static bool List(LdnServer server)
+        static bool List(AbstractLdnServer server)
         {
             KeyValuePair<string, HostedGame>[] games = server.All();
 
