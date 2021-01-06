@@ -259,7 +259,7 @@ namespace Valve.Sockets {
 		WGNetworkSendExceeded = 110
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct Address : IEquatable<Address> {
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
 		public byte[] ip;
@@ -320,7 +320,7 @@ namespace Valve.Sockets {
 		private ConnectionState oldState;
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct ConnectionInfo {
 		public NetworkingIdentity identity;
 		public long userData;
