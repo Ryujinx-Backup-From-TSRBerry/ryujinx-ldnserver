@@ -41,7 +41,7 @@ namespace LanPlayServer.LdnServer.Backends
 
             long time = (time2 - time1) / (System.Diagnostics.Stopwatch.Frequency / 1000);
 
-            Console.WriteLine($"Send took {time}ms. reliable: {reliable}");
+            //Console.WriteLine($"Send took {time}ms. reliable: {reliable}");
         }
     }
 }

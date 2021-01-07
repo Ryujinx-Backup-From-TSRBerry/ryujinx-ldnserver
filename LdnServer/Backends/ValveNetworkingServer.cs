@@ -97,8 +97,11 @@ namespace LanPlayServer.LdnServer.Backends
 			}
 		}
 
+		private bool DidRecv = false;
+
 		private void MessageCallback(in NetworkingMessage netMessage)
         {
+			DidRecv = true;
 			if (SessionById.TryGetValue(netMessage.connection, out ValveNetworkingSession session))
 			{
 				byte[] data = new byte[netMessage.length];
@@ -114,8 +117,16 @@ namespace LanPlayServer.LdnServer.Backends
 			while (_isAlive)
             {
 				_server.RunCallbacks();
+				var time1 = System.Diagnostics.Stopwatch.GetTimestamp();
 
+				DidRecv = false;
 				_server.ReceiveMessagesOnPollGroup(_pollGroup, _messageDelegate, 200);
+
+				var time2 = System.Diagnostics.Stopwatch.GetTimestamp();
+
+				long time = (time2 - time1) / (System.Diagnostics.Stopwatch.Frequency / 1000);
+
+				if (DidRecv) Console.WriteLine($"Recv took {time}ms.");
 
 				Thread.Sleep(1);
             }
