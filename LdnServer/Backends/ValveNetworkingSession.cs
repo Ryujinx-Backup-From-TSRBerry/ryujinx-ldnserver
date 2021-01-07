@@ -35,7 +35,7 @@ namespace LanPlayServer.LdnServer.Backends
 
         public override void SendAsync(byte[] data, bool reliable)
         {
-            _sockets.SendMessageToConnection(_connection, data, reliable ? SendFlags.Reliable | SendFlags.NoDelay | SendFlags.NoNagle : SendFlags.Unreliable);
+            _sockets.SendMessageToConnection(_connection, data, (reliable ? SendFlags.Reliable : SendFlags.Unreliable) | SendFlags.NoDelay | SendFlags.NoNagle);
         }
     }
 }
