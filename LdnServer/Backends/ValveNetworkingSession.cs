@@ -35,7 +35,13 @@ namespace LanPlayServer.LdnServer.Backends
 
         public override void SendAsync(byte[] data, bool reliable)
         {
+            var time1 = System.Diagnostics.Stopwatch.GetTimestamp();
             _sockets.SendMessageToConnection(_connection, data, (reliable ? SendFlags.Reliable : SendFlags.Unreliable) | SendFlags.NoDelay | SendFlags.NoNagle);
+            var time2 = System.Diagnostics.Stopwatch.GetTimestamp();
+
+            long time = (time2 - time1) / (System.Diagnostics.Stopwatch.Frequency / 1000);
+
+            Console.WriteLine($"Send took {time}ms. reliable: {reliable}");
         }
     }
 }
