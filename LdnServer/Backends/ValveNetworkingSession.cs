@@ -8,6 +8,9 @@ namespace LanPlayServer.LdnServer.Backends
 {
     class ValveNetworkingSession : LdnSession
     {
+        private const SendFlags ReliableFlags = SendFlags.Reliable | SendFlags.NoNagle;
+        private const SendFlags UnreliableFlags = SendFlags.Unreliable | SendFlags.NoNagle;
+
         private ValveNetworkingServer _server;
         private NetworkingSockets _sockets;
         private uint _connection;
@@ -35,11 +38,12 @@ namespace LanPlayServer.LdnServer.Backends
 
         public override void SendAsync(byte[] data, bool reliable)
         {
-            var time1 = System.Diagnostics.Stopwatch.GetTimestamp();
-            _sockets.SendMessageToConnection(_connection, data, (reliable ? SendFlags.Reliable : SendFlags.Unreliable) | SendFlags.NoDelay | SendFlags.NoNagle);
-            var time2 = System.Diagnostics.Stopwatch.GetTimestamp();
+            Result result = _sockets.SendMessageToConnection(_connection, data, reliable ? ReliableFlags : UnreliableFlags);
 
-            long time = (time2 - time1) / (System.Diagnostics.Stopwatch.Frequency / 1000);
+            if (result != Result.OK)
+            {
+                Console.WriteLine($"Failed to send message: {result}");
+            }
 
             //Console.WriteLine($"Send took {time}ms. reliable: {reliable}");
         }
