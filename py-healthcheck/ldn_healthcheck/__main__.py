@@ -2,12 +2,10 @@ import json
 import time
 from enum import IntEnum
 
-import dbus
 import logging
 import os
 
 import requests
-from dbus import DBusException
 from discord_webhook import DiscordEmbed, DiscordWebhook
 
 from .ryuldn.packets.create_access_point import CreateAccessPointPacket
@@ -138,45 +136,14 @@ def send_api_message(api_success: bool):
     webhook.set_content(message)
     webhook.execute(True)
 
-
-def restart_service():
-    message = f":warning: <@&{SERVER_RESTART_PING_ROLE}> :warning:\n" \
-              "The LDN server stopped working correctly.\nRestarting..."
-    webhook.set_content(message)
-    webhook.execute(True)
-    try:
-        manager.RestartUnit(service_name, "fail")
-    except DBusException as ex:
-        logging.exception("Could not restart the LDN service.")
-        webhook.set_content(f"{message} Error.\n```{ex}\n```")
-        webhook.edit()
-        exit(1)
-
-    webhook.set_content(f"{message} Done.")
-    webhook.edit()
-
-
 def main():
-    global webhook, manager, service_name
+    global webhook
 
     if "DEBUG" in os.environ.keys():
         logging.getLogger().setLevel(logging.DEBUG)
     else:
         logging.getLogger().setLevel(logging.INFO)
 
-    logging.debug("Getting system bus manager interface...")
-    sys_bus = dbus.SystemBus()
-    systemd1 = sys_bus.get_object(
-        "org.freedesktop.systemd1", "/org/freedesktop/systemd1"
-    )
-    manager = dbus.Interface(systemd1, "org.freedesktop.systemd1.Manager")
-
-    if "LDN_SERVICE" not in os.environ.keys() or len(os.environ["LDN_SERVICE"]) == 0:
-        logging.error("LDN service name is not configured.")
-        exit(1)
-
-    service_name = os.environ["LDN_SERVICE"]
-    logging.debug(f"Got LDN service name: {service_name}")
 
     if "DC_WEBHOOK" not in os.environ.keys() or len(os.environ["DC_WEBHOOK"]) == 0:
         logging.error("Discord webhook is not configured.")
@@ -206,7 +173,6 @@ def main():
         send_wip_embed(2, TestStatus.Cancelled)
         send_done_embed(False)
         send_api_message(api_success)
-        restart_service()
         exit(0)
 
     send_wip_embed(0, TestStatus.Passed)
@@ -221,7 +187,6 @@ def main():
         send_wip_embed(2, TestStatus.Cancelled)
         send_done_embed(False)
         send_api_message(api_success)
-        restart_service()
         exit(0)
 
     logging.info(f"Initialize reply received: {init_response}")
